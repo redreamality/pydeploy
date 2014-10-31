@@ -1,10 +1,15 @@
+# -*- coding: utf-8 -*-
+
 from fabric.api import *
 from fabric.colors import green, red, yellow, blue
 from fabric.contrib.console import confirm
 
+
+
 env.hosts = ["rsj217@localhost"]
 env.password = "sirui"
 env.user = "rsj217"
+env.group = "rsj217"
 
 
 def deploy():
@@ -12,26 +17,27 @@ def deploy():
     print green("="*40)
     print blue("create the project directory")
     print blue("*"*40)
+    # 创建部署文件夹
     with settings(warn_only=True):
         result =  sudo("mkdir /var/deploy")
-    if result.failed:
-        sudo("rm -rf /var/deploy/*.*")
-    sudo("chown -R rsj217:rsj217 /var/deploy")   
+    # 更改文件夹所属关系    
+    sudo("chown -R {}:{} /var/deploy".format(env.user, env.group))
     print blue("get the source code from remote")
     print blue("*"*40)
+    # 获取源代码
     with cd("/var/deploy/"):
         with settings(warn_only=True):
-            result = run("git clone https://coding.net/rsj217/myproject.git")
-        if result.failed:
-            run("rm -rf myproject")
-            run("git clone https://coding.net/rsj217/myproject.git")
+            result = run("rm -rf myproject")
+        run("git clone https://coding.net/rsj217/myproject.git")
 
     print blue("install the virtualenv")
     print blue("*"*40)
+    # 安装 python 虚拟环境
     sudo("apt-get install python-virtualenv")    
     
     print blue("create the virtual env")    
     print blue("*"*40)
+    # 安装 python 第三方库
     with cd("/var/deploy"):
         result = run("virtualenv venv")
         run("source venv/bin/activate; pip install -r /var/deploy/myproject/requirements.txt")
@@ -39,10 +45,5 @@ def deploy():
 
 
 
-# def touch():
-#    with settings(warn_only=True):
-#        result = sudo("touch /test.txt")  
-#    if result.failed and not confirm("Tests faiked"):
-#        abort("aborting !!!")
 
 
