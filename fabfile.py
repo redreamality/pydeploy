@@ -15,25 +15,26 @@ def deploy():
     with settings(warn_only=True):
         result =  sudo("mkdir /var/deploy")
     if result.failed:
-        sudo("rm -rf /var/deploy")
-        sudo("mkdir /var/deploy")
-    
+        sudo("rm -rf /var/deploy/*.*")
+    sudo("chown -R rsj217:rsj217 /var/deploy")   
     print blue("get the source code from remote")
     print blue("*"*40)
     with cd("/var/deploy/"):
-        sudo("git clone https://coding.net/rsj217/myproject.git")
-        sudo("chown -R rsj217:rsj217 myproject")
-        # sudo("chmod -R 777 myproject")
+        with settings(warn_only=True):
+            result = run("git clone https://coding.net/rsj217/myproject.git")
+        if result.failed:
+            run("rm -rf myproject")
+            run("git clone https://coding.net/rsj217/myproject.git")
+
     print blue("install the virtualenv")
     print blue("*"*40)
     sudo("apt-get install python-virtualenv")    
     
     print blue("create the virtual env")    
     print blue("*"*40)
-    with cd("/var/deploy/myproject"):
-        sudo("virtualenv venv")
-        run("source venv/bin/activate")
-        # run("pip install -r requirements.txt")
+    with cd("/var/deploy"):
+        result = run("virtualenv venv")
+        run("source venv/bin/activate; pip install -r /var/deploy/myproject/requirements.txt")
 
 
 
