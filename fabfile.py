@@ -19,7 +19,8 @@ def deploy():
     print blue("*"*40)
     # 创建部署文件夹
     with settings(warn_only=True):
-        result =  sudo("mkdir /var/deploy")
+        sudo("mkdir /var/deploy")
+        sudo("mkdir /var/deploy/log")
     # 更改文件夹所属关系    
     sudo("chown -R {}:{} /var/deploy".format(env.user, env.group))
     print blue("get the source code from remote")
