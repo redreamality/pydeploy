@@ -15,16 +15,10 @@ def deploy():
         sudo("mkdir /var/deploy")
     with cd("/var/deploy/"):
         sudo("git clone https://coding.net/rsj217/myproject.git")
-    
+    with cd("/var/deploy/myproject"):
+        sudo("apt-get install python-virtualenv")    
 
 
-# from fabric.api import env, run, settings, abort, sudo
-# from fabric.contrib.console import confirm
-
-
-# def config(hosts, password):
-#    env.hosts = hosts # ["rsj217@192.168.1.200"]
-#    env.password = password #"sirui"
 
 # def touch():
 #    with settings(warn_only=True):
