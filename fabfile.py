@@ -19,6 +19,11 @@ VENV_DIR = os.path.join(DEPLOY_DIR, 'venv')
 VENV_PATH = os.path.join(VENV_DIR, 'bin/activate')
 
 
+@contextmanager
+def source_virtualenv():
+    with prefix("source {}".format(VENV_PATH)):
+        yield
+
 
 def mkdir(prefix=None, path=None):
     mkdir_command = "mkdir {}".format(path)
@@ -66,8 +71,9 @@ def deploy():
     # 安装 python 第三方库
     with cd(DEPLOY_DIR):
         run("virtualenv {}".format(VENV_DIR))
-        with prefix("source {}".format(VENV_PATH)):
-            run("pip list")
+        with source_virtualenv():
+            run("pip install -r {}/requirements.txt".format(PROJECT_DIR))
+
 
 
 
