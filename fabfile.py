@@ -53,7 +53,6 @@ def deploy():
 
     # 创建部署文件夹
     mkdir('sudo', path=DEPLOY_DIR)
-#    create_folder(DEPLOY_DIR, owner=env.user, group=env.group, mod='770')
 
     # 更改文件夹所属关系    
     sudo("chown -R {}:{} {}".format(env.user, env.group, DEPLOY_DIR))
@@ -72,9 +71,13 @@ def deploy():
     # 安装 python 虚拟环境
     sudo("apt-get install python-virtualenv")    
     
-    print blue("create the virtual env")    
+    print blue("install the nginx")
     print blue("*"*40)
-   
+    
+    with settings(warn_only=True):
+        sudo("apt-get install nginx")  
+        sudo("cp {}/nginx.conf /etc/nginx/".format(PROJECT_DIR))
+        sudo("cp {}/nginx_gunicorn.conf /etc/nginx/sites-enabled/".format(PROJECT_DIR))
 
     # 安装 python 第三方库
     with cd(DEPLOY_DIR):
@@ -85,12 +88,12 @@ def deploy():
                 run("pip install -r {}/requirements.txt".format(PROJECT_DIR))
             
                 with settings(warn_only=True):
-                    stop_result = run("supervisorctl -c {}/supervisor.conf stop all".format(PROJECT_DIR))
+                    stop_result = sudo("supervisorctl -c {}/supervisor.conf stop all".format(PROJECT_DIR))
                     if not stop_result.failed:
-                        kill_result = run("pkill supervisor")
+                        kill_result = sudo("pkill supervisor")
                         if not kill_result:
-                            run("supervisord -c {}/supervisor.conf".format(PROJECT_DIR))
-                            run("supervisorctl -c {}/supervisor.conf reload".format(PROJECT_DIR))
-                            run("supervisorctl -c {}/supervisor.conf status".format(PROJECT_DIR))
-                            run("supervisorctl -c {}/supervisor.conf start all".format(PROJECT_DIR))
+                            sudo("supervisord -c {}/supervisor.conf".format(PROJECT_DIR))
+                            sudo("supervisorctl -c {}/supervisor.conf reload".format(PROJECT_DIR))
+                            sudo("supervisorctl -c {}/supervisor.conf status".format(PROJECT_DIR))
+                            sudo("supervisorctl -c {}/supervisor.conf start all".format(PROJECT_DIR))
 
