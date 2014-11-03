@@ -6,6 +6,8 @@ from fabric.colors import green, red, yellow, blue
 from fabric.contrib.console import confirm
 from fabric.contrib.files import exists
 
+# from fabric_components.folder import create_folder
+
 from contextlib import contextmanager
 
 env.hosts = ["rsj217@localhost"]
@@ -15,6 +17,7 @@ env.group = "rsj217"
 
 DEPLOY_DIR = '/var/deploy'
 PROJECT_DIR = os.path.join(DEPLOY_DIR, 'myproject')
+LOG_DIR = os.path.join(DEPLOY_DIR, 'log')
 VENV_DIR = os.path.join(DEPLOY_DIR, 'venv')
 VENV_PATH = os.path.join(VENV_DIR, 'bin/activate')
 
@@ -49,10 +52,13 @@ def deploy():
     print blue("*"*40)
 
     # 创建部署文件夹
-    mkdir('sudo', path=DEPLOY_DIR)    
+    mkdir('sudo', path=DEPLOY_DIR)
+#    create_folder(DEPLOY_DIR, owner=env.user, group=env.group, mod='770')
 
     # 更改文件夹所属关系    
     sudo("chown -R {}:{} {}".format(env.user, env.group, DEPLOY_DIR))
+    # 创建log文件夹
+    mkdir(path=LOG_DIR)
     print blue("get the source code from remote")
     print blue("*"*40)
     # 获取源代码
@@ -68,14 +74,22 @@ def deploy():
     
     print blue("create the virtual env")    
     print blue("*"*40)
+   
+
     # 安装 python 第三方库
     with cd(DEPLOY_DIR):
-        run("virtualenv {}".format(VENV_DIR))
-        with source_virtualenv():
-            run("pip install -r {}/requirements.txt".format(PROJECT_DIR))
-
-
-
-
-
+        if not exists(VENV_DIR):
+            run("virtualenv {}".format(VENV_DIR))
+        with settings(warn_only=True):
+            with source_virtualenv():
+                run("pip install -r {}/requirements.txt".format(PROJECT_DIR))
+            
+                with settings(warn_only=True):
+                    stop_result = run("supervisorctl -c {}/supervisor.conf stop all".format(PROJECT_DIR))
+                    if not stop_result.failed:
+                        kill_result = run("pkill supervisor")
+                        if not kill_result:
+                            run("supervisord -c {}/supervisor.conf".format(PROJECT_DIR))
+                            run("supervisorctl -c {}/supervisor.conf status".format(PROJECT_DIR))
+                            run("supervisorctl -c {}/supervisor.conf start all".format(PROJECT_DIR))
 
