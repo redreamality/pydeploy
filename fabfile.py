@@ -90,6 +90,7 @@ def deploy():
                         kill_result = run("pkill supervisor")
                         if not kill_result:
                             run("supervisord -c {}/supervisor.conf".format(PROJECT_DIR))
+                            run("supervisorctl -c {}/supervisor.conf reload".format(PROJECT_DIR))
                             run("supervisorctl -c {}/supervisor.conf status".format(PROJECT_DIR))
                             run("supervisorctl -c {}/supervisor.conf start all".format(PROJECT_DIR))
 
